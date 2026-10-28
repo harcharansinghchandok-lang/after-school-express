@@ -1,0 +1,12 @@
+[
+  { "id": 1001, "topic": "Maths",    "location": "Hendon",        "price": 100, "space": 5, "icon": "fa-solid fa-calculator" },
+  { "id": 1002, "topic": "Piano",    "location": "Colindale",     "price": 80,  "space": 5, "icon": "fa-solid fa-music" },
+  { "id": 1003, "topic": "Football", "location": "Brent Cross",   "price": 60,  "space": 5, "icon": "fa-solid fa-futbol" },
+  { "id": 1004, "topic": "Art",      "location": "Golders Green", "price": 70,  "space": 5, "icon": "fa-solid fa-palette" },
+  { "id": 1005, "topic": "Science",  "location": "Hendon",        "price": 90,  "space": 5, "icon": "fa-solid fa-flask" },
+  { "id": 1006, "topic": "English",  "location": "Colindale",     "price": 85,  "space": 5, "icon": "fa-solid fa-book" },
+  { "id": 1007, "topic": "Coding",   "location": "Brent Cross",   "price": 120, "space": 5, "icon": "fa-solid fa-laptop-code" },
+  { "id": 1008, "topic": "Chess",    "location": "Golders Green", "price": 50,  "space": 5, "icon": "fa-solid fa-chess" },
+  { "id": 1009, "topic": "Swimming", "location": "Hendon",        "price": 75,  "space": 5, "icon": "fa-solid fa-person-swimming" },
+  { "id": 1010, "topic": "Drama",    "location": "Colindale",     "price": 65,  "space": 5, "icon": "fa-solid fa-masks-theater" }
+]
