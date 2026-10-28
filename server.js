@@ -45,6 +45,54 @@ app.get("/", (req, res) => {
   res.send("After School Classes API is running. Try /lessons");
 });
 
+// GET /lessons  -> all lessons as JSON
+app.get("/lessons", async (req, res) => {
+  try {
+    const lessons = await db.collection("lesson").find({}).toArray();
+    res.json(lessons);
+  } catch (err) {
+    res.status(500).json({ error: "Could not get lessons" });
+  }
+});
+
+// GET /search?q=text  -> search topic, location, price and space (back-end search)
+app.get("/search", async (req, res) => {
+  try {
+    const q = (req.query.q || "").trim();
+    if (q === "") {
+      const all = await db.collection("lesson").find({}).toArray();
+      return res.json(all);
+    }
+
+    // make special characters safe inside a regular expression
+    const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const results = await db.collection("lesson").find({
+      $or: [
+        { topic:    { $regex: safe, $options: "i" } },
+        { location: { $regex: safe, $options: "i" } },
+        { $expr: { $regexMatch: { input: { $toString: "$price" }, regex: safe } } },
+        { $expr: { $regexMatch: { input: { $toString: "$space" }, regex: safe } } }
+      ]
+    }).toArray();
+
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: "Search failed" });
+  }
+});
+
+// GET /teachers  -> all teachers (with the lessons they teach)
+app.get("/teachers", async (req, res) => {
+  try {
+    const teachers = await db.collection("teacher").find({}).toArray();
+    res.json(teachers);
+  } catch (err) {
+    res.status(500).json({ error: "Could not get teachers" });
+  }
+});
+
+// ---------- Connect to MongoDB Atlas, then start the server ----------
 client.connect()
   .then(() => {
     db = client.db(DB_NAME);
