@@ -16,6 +16,28 @@ let db;
 app.use(cors());
 app.use(express.json());
 
+// 1) LOGGER middleware: prints every request to the console
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    console.log(
+      new Date().toISOString() + " | " +
+      req.method + " " + req.originalUrl + " | " +
+      "status " + res.statusCode + " | " +
+      (Date.now() - start) + "ms | " +
+      "IP " + req.ip
+    );
+  });
+  next();
+});
+
+// 2) STATIC FILE middleware: serves lesson images from /images
+app.use("/images", express.static(path.join(__dirname, "images")));
+// If the file was not found above, send an error message
+app.use("/images", (req, res) => {
+  res.status(404).send("Error: image file not found");
+});
+
 // ---------- REST API routes ----------
 
 // Home (quick check that the server is running)
@@ -23,7 +45,6 @@ app.get("/", (req, res) => {
   res.send("After School Classes API is running. Try /lessons");
 });
 
-// ---------- Connect to MongoDB Atlas, then start the server ----------
 client.connect()
   .then(() => {
     db = client.db(DB_NAME);
