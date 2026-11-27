@@ -92,6 +92,102 @@ app.get("/teachers", async (req, res) => {
   }
 });
 
+// GET /enrolment/:lessonid  -> number of spaces already bought for that lesson
+app.get("/enrolment/:lessonid", async (req, res) => {
+  try {
+    const lessonID = Number(req.params.lessonid);
+
+    const lesson = await db.collection("lesson").findOne({ id: lessonID });
+    if (!lesson) {
+      return res.status(404).json({ error: "Lesson not found" });
+    }
+
+    const result = await db.collection("order").aggregate([
+      { $unwind: "$items" },
+      { $match: { "items.lessonID": lessonID } },
+      { $group: { _id: null, total: { $sum: "$items.spaces" } } }
+    ]).toArray();
+
+    res.json({
+      lessonID: lessonID,
+      topic: lesson.topic,
+      enrolment: result.length > 0 ? result[0].total : 0
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Could not get enrolment" });
+  }
+});
+
+// POST /orders  -> saves a new order in the "order" collection
+app.post("/orders", async (req, res) => {
+  try {
+    const { name, phone, lessonIDs, spaces, items } = req.body;
+
+    if (!name || !/^[A-Za-z ]+$/.test(name) ||
+        !phone || !/^[0-9]+$/.test(phone) ||
+        !Array.isArray(lessonIDs) || lessonIDs.length === 0 ||
+        !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: "Invalid order data" });
+    }
+
+    const order = {
+      name: name,
+      phone: phone,
+      lessonIDs: lessonIDs,
+      spaces: Number(spaces),
+      items: items,
+      createdAt: new Date()
+    };
+
+    const result = await db.collection("order").insertOne(order);
+    res.status(201).json({ message: "Order saved", orderId: result.insertedId });
+  } catch (err) {
+    res.status(500).json({ error: "Could not save order" });
+  }
+});
+
+// PUT /lessons/:id  -> updates ANY attribute(s) of a lesson
+// Example body: { "space": 3 }  or  { "price": 90, "location": "Hendon" }
+app.put("/lessons/:id", async (req, res) => {
+  try {
+    const lessonID = Number(req.params.id);
+    const changes = { ...req.body };
+    delete changes._id;   // never change the ids
+    delete changes.id;
+
+    if (Object.keys(changes).length === 0) {
+      return res.status(400).json({ error: "Nothing to update" });
+    }
+
+    // keep numbers as numbers
+    for (const field of ["space", "price"]) {
+      if (field in changes) {
+        changes[field] = Number(changes[field]);
+        if (isNaN(changes[field])) {
+          return res.status(400).json({ error: field + " must be a number" });
+        }
+      }
+    }
+
+    const result = await db.collection("lesson").updateOne(
+      { id: lessonID },
+      { $set: changes }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Lesson not found" });
+    }
+    res.json({ message: "Lesson updated", modified: result.modifiedCount });
+  } catch (err) {
+    res.status(500).json({ error: "Could not update lesson" });
+  }
+});
+
+// Any other route
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
 // ---------- Connect to MongoDB Atlas, then start the server ----------
 client.connect()
   .then(() => {
