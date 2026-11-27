@@ -8,15 +8,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_NAME = process.env.DB_NAME || "afterschool";
 
-// Native MongoDB driver (no Mongoose)
 const client = new MongoClient(process.env.MONGODB_URI);
 let db;
 
 // ---------- Middleware ----------
-app.use(cors());
-app.use(express.json());
+app.use(cors());           
+app.use(express.json());   
 
-// 1) LOGGER middleware: prints every request to the console
 app.use((req, res, next) => {
   const start = Date.now();
   res.on("finish", () => {
@@ -31,7 +29,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// 2) STATIC FILE middleware: serves lesson images from /images
 app.use("/images", express.static(path.join(__dirname, "images")));
 // If the file was not found above, send an error message
 app.use("/images", (req, res) => {
@@ -40,7 +37,7 @@ app.use("/images", (req, res) => {
 
 // ---------- REST API routes ----------
 
-// Home (quick check that the server is running)
+// Home 
 app.get("/", (req, res) => {
   res.send("After School Classes API is running. Try /lessons");
 });
@@ -146,8 +143,7 @@ app.post("/orders", async (req, res) => {
   }
 });
 
-// PUT /lessons/:id  -> updates ANY attribute(s) of a lesson
-// Example body: { "space": 3 }  or  { "price": 90, "location": "Hendon" }
+// PUT /lessons/:id  -> updates ANY attribute of a lesson
 app.put("/lessons/:id", async (req, res) => {
   try {
     const lessonID = Number(req.params.id);
@@ -188,7 +184,6 @@ app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// ---------- Connect to MongoDB Atlas, then start the server ----------
 client.connect()
   .then(() => {
     db = client.db(DB_NAME);
